@@ -7,7 +7,9 @@
 class IPreprocessor
 {
     public:
-
+    virtual ~IPreprocessor() {};
+	double last_timestamp;
+	virtual double getTimeStamp() { return last_timestamp; };
     virtual std::string getSymbol() =0;
     virtual bool symbolReady() =0;
     virtual std::vector<std::string> getBindMessages()=0;

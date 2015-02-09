@@ -53,11 +53,14 @@ namespace Monitors
       CYKParser parser;
       ConcatPreprocessor *preprocess;
       std::ofstream logofs;
+      bool initOK;
 
 
       Task(const std::string& name, Tasks::Context& ctx):
         DUNE::Tasks::Periodic(name, ctx)
       {
+        initOK=false;
+        preprocess=NULL;
         param("Bind to", m_args.bind_messages)
         .defaultValue("")
         .description("List of messages to bind");
@@ -144,11 +147,11 @@ namespace Monitors
         {
              std::vector<std::string> b=preprocess->getBindMessages();
             bind(this, b);
-            std::cout<<"Binding to:"<<b[0]<<std::endl;
+            //std::cout<<"Binding to:"<<b[0]<<std::endl;
         }
         //bind(this, m_args.bind_messages);
 
-        std::cout<<"ONUPDATEPARAMETERS"<<std::endl;
+        //std::cout<<"ONUPDATEPARAMETERS"<<std::endl;
       }
 
       void
@@ -167,7 +170,12 @@ namespace Monitors
       void
       onResourceRelease(void)
       {
-
+        /*std::cout<<"DELETE PREPROCESS -----------------------------------"<<std::endl;
+        if(preprocess)
+        {
+            delete preprocess;
+            preprocess=NULL;
+        }*/
       }
 
       void
@@ -189,18 +197,22 @@ namespace Monitors
         FileSystem::Path logpath=m_ctx.dir_log/ m_args.log_file;
         if(!grammarpath.isFile())
         {
+			war("Cannot Load Grammar File: %s",m_args.grammar_filename.c_str());
             setEntityState(IMC::EntityState::ESTA_FAULT, Status::CODE_IO_ERROR);
+            initOK=false;
             return ;
         }
 
         std::ifstream gifs(grammarpath.c_str());
-        grammar.load(gifs);
-        gifs.close();
-
-
-
-
-
+        //grammar.load(gifs);
+        if(grammar.load(gifs)==false)
+        {
+            war("Cannot Parse Grammar File: %s",m_args.grammar_filename.c_str());
+             setEntityState(IMC::EntityState::ESTA_FAULT, Status::CODE_IO_ERROR);
+            gifs.close();
+            initOK=false;
+            return ;
+        }
 
         if(preprocess)
         {
@@ -213,11 +225,20 @@ namespace Monitors
 
                 if(!quant.isFile())
                 {
+					war("Cannot Load Quantization File: %s",m_args.quant_filename[i].c_str());
                     setEntityState(IMC::EntityState::ESTA_FAULT, Status::CODE_IO_ERROR);
+                    initOK=false;
                     return ;
                 }
                 std::ifstream quantifs(quant.c_str());
-                preprocess->concat[i]->load(quantifs);
+                if(preprocess->concat[i]->load(quantifs)==false)
+                  {
+					war("Cannot Parse Quantization File: %s",m_args.quant_filename[i].c_str());
+                    setEntityState(IMC::EntityState::ESTA_FAULT, Status::CODE_IO_ERROR);
+                    quantifs.close();
+                    initOK=false;
+                    return ;
+                }
                 quantifs.close();
             }
 
@@ -232,32 +253,16 @@ namespace Monitors
 
         grammar.convertToChomsky();
 
-        grammar.printRules();
-        std::cout<<"------"<<std::endl;
+        //grammar.printRules();
+        //std::cout<<"------"<<std::endl;
 
         parser.loadGrammar(grammar);
         parser.resize(m_args.window_size);
 
-        parser.printUnitary();
-        /*std::cout<<"------"<<std::endl;
-        //parser.printBinary();
-        parser.parseSymbol("0");
-        parser.printRoot();
-        std::cout<<parser.mostLikelySymbol()<<" ("<<parser.rootProbability()<<") "<<std::endl;
-         parser.parseSymbol("0");
-        parser.printRoot();
-        std::cout<<parser.mostLikelySymbol()<<" ("<<parser.rootProbability()<<") "<<std::endl;
-         parser.parseSymbol("0");
-        parser.printRoot();
-        std::cout<<parser.mostLikelySymbol()<<" ("<<parser.rootProbability()<<") "<<std::endl;
-         parser.parseSymbol("0");
-        parser.printRoot();
-        std::cout<<parser.mostLikelySymbol()<<" ("<<parser.rootProbability()<<") "<<std::endl;
-         parser.parseSymbol("0");
-        parser.printRoot();
-        std::cout<<parser.mostLikelySymbol()<<" ("<<parser.rootProbability()<<") "<<std::endl;
-        //*/
-        //grammar.printRules();
+        //parser.printUnitary();
+
+        inf("Loaded Configuration Files");
+        initOK=true;
         setEntityState(IMC::EntityState::ESTA_BOOT, Status::CODE_INIT);
 
       }
@@ -267,7 +272,8 @@ namespace Monitors
       {
         //if (!isActive())
         //  return;
-          if(preprocess)
+            inf("Consume");
+          if(preprocess&&initOK)
           {
             inf("Received  msg: %s",IMC::Factory::getAbbrevFromId(msg->getId()).c_str());
             preprocess->prerocess(msg);
@@ -290,13 +296,13 @@ namespace Monitors
       task(void)
       {
 
-        if(preprocess&&preprocess->symbolReady())
+        if(preprocess&&initOK&&preprocess->symbolReady())
         {
 
             std::string s=preprocess->getSymbol();
-            std::cout<<"Run:"<<s<<std::endl;
+            //std::cout<<"Run:"<<s<<std::endl;
             parser.parseSymbol(s);
-            parser.printRoot();
+            //parser.printRoot();
             if(m_args.normal_abnormal_mode)
             {
 
@@ -329,13 +335,15 @@ namespace Monitors
             {
                 if(preprocess)
                 {
+					logofs<<preprocess->getTimeStamp()<<",";
                     for(unsigned i=0;i<preprocess->concat.size();i++)
                         logofs<<preprocess->concat[i]->getRaw()<<",";
                     for(unsigned i=0;i<preprocess->concat.size();i++)
                         logofs<<preprocess->concat[i]->getSymbol()<<",";
+                    logofs<<grammar.symbols.getId(s)<<std::endl;
 
                 }
-                logofs<<grammar.symbols.getId(s)<<std::endl;
+
             }
 
         }

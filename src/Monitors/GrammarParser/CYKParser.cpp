@@ -163,7 +163,7 @@ std::string CYKParser::mostLikelySymbol()
 void CYKParser::parseSymbol(std::string symbol)
 {
     std::size_t newsymbol= g.symbols.getId(symbol);
-    std::cout<<"Symbol "<< "|"<<symbol<<"|"<<newsymbol<<" "<<loadedSymbols<<std::endl;
+    //std::cout<<"Symbol "<< "|"<<symbol<<"|"<<newsymbol<<" "<<loadedSymbols<<std::endl;
     assert(newsymbol>0);
     if(w==loadedSymbols) //Drop oldest if
     {
@@ -180,7 +180,7 @@ void CYKParser::parseSymbol(std::string symbol)
            parseChart[w-1][j].clear(); //Clear last row
 
         loadedSymbols--;
-          std::cout<<"Clean Done"<<std::endl;
+        //std::cout<<"Clean Done"<<std::endl;
     }
 
     unsigned s=loadedSymbols;

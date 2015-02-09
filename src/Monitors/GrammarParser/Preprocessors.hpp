@@ -34,7 +34,7 @@ class DepthPreprocessor : public IPreprocessor
 			if(last_timestamp>0)
 			{
 			    ready=true;
-			    std::cout<<"Quantize:"<<dx/dt<<std::endl;
+			    //std::cout<<"Quantize:"<<dx/dt<<std::endl;
 			    symbol=quantizer.quantize(dx/dt);
 
 			}
@@ -57,7 +57,6 @@ class DepthPreprocessor : public IPreprocessor
     std::string symbol;
     uint32_t messageId;
     float last;
-    double last_timestamp;
 	Quantizer quantizer;
 
 };
@@ -92,6 +91,7 @@ class HierarchicalPreprocessor: public IPreprocessor
 				return false;
 			symbol = d->result;
 			ready=true;
+			last_timestamp=msg->getTimeStamp();
 
 		}
 		return true;
@@ -142,7 +142,7 @@ class PitchPreprocessor : public IPreprocessor
 			const DUNE::IMC::EulerAngles* d=(const DUNE::IMC::EulerAngles*)msg;
 			last=-d->theta;
 			ready=true;
-			std::cout<<"Quantize:"<<d->theta<<std::endl;
+			//std::cout<<"Quantize:"<<d->theta<<std::endl;
 			symbol=quantizer.quantize(last);
 			last_timestamp=msg->getTimeStamp();
 
@@ -163,8 +163,7 @@ class PitchPreprocessor : public IPreprocessor
     std::string symbol;
     uint32_t messageId;
     float last;
-    double last_timestamp;
-	Quantizer quantizer;
+    Quantizer quantizer;
 
 };
 
@@ -173,6 +172,15 @@ class ConcatPreprocessor
 {
 
 	public:
+	~ConcatPreprocessor()
+	{
+		for(unsigned i=0;i<concat.size();i++)
+		{
+			std::cout<<"deleting"<<concat[i]<<std::endl;
+			delete concat[i];
+		}
+		
+	}
 
 	 bool prerocess(const DUNE::IMC::Message* msg)
 	 {
@@ -183,6 +191,8 @@ class ConcatPreprocessor
 					flag=false;
 
 			}
+		if(flag)
+			last_timestamp=msg->getTimeStamp();
 		return flag;
 	}
 	std::string getSymbol() {
@@ -214,7 +224,8 @@ class ConcatPreprocessor
 		return res;
 	}
 	void append(IPreprocessor*p) {concat.push_back(p);};
-
+	double getTimeStamp() { return last_timestamp; };
+	double last_timestamp;
 	std::vector<IPreprocessor*> concat;
 };
 

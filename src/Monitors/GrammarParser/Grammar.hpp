@@ -1,5 +1,6 @@
 #ifndef GRAMMAR_HPP_INCLUDED_
 #define GRAMMAR_HPP_INCLUDED_
+#include <ios>
 #include <istream>
 #include <iostream>
 #include <limits>
@@ -60,6 +61,14 @@ class Grammar
         return true;
 
     }
+    void skipComments(std::istream &is)
+    {
+        if(is.peek()==GRAMMAR_COMMENT_DELIM)
+        {
+            is.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+        }
+
+    }
     void printRules()
     {
         for(unsigned i=0;i<allRules.size();i++)
@@ -77,6 +86,7 @@ class Grammar
     bool load(std::istream &is)
     {
         std::string read;
+        is>>std::skipws;
         //while(!is.eof())
         //{
             if(getToken(is,read)==false)
@@ -87,10 +97,10 @@ class Grammar
         //}
         unsigned numskip,temp;
 
-        std::cout<<"Reading numskip"<<numskip<<std::endl;
+        //std::cout<<"Reading numskip"<<numskip<<std::endl;
         if(getToken<unsigned>(is,numskip)==false)
                 return false;
-        std::cout<<"Skipping"<<numskip<<std::endl;
+        //std::cout<<"Skipping"<<numskip<<std::endl;
         for(unsigned i=0;i<2*numskip;i++)
         {
             if(getToken<unsigned>(is,temp)==false)
@@ -99,12 +109,16 @@ class Grammar
 
         while(!is.eof())
         {
+            //std::cout<<"Reading New Set"<<"|"<<is.peek()<<"|"<<std::endl;
             if(getToken(is,read)==false)
                 return false;
             std::size_t lhs=symbols.registerNew(read);
+            //std::cout<<"lhs: "<<lhs<<std::endl;
             unsigned numOfRules;
             if(getToken<unsigned>(is,numOfRules)==false)
                 return false;
+            //std::cout<<"numOfRules: "<<numOfRules<<std::endl;
+
 
             for(unsigned i=0;i<numOfRules;i++)
             {
@@ -129,7 +143,10 @@ class Grammar
                 if(getToken(is,read)==false)
                         return false;
                 allRules.push_back(newrule);
+                is.ignore( std::numeric_limits<std::streamsize>::max(),'\n');
+                skipComments(is);
             }
+
 
         }
         return true;

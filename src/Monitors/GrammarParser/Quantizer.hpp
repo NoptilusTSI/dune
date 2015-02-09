@@ -20,10 +20,10 @@ class Quantizer
         symbols.resize(ttl);
         for(unsigned i=0;i<ttl;i++)
         {
-			std::cout<<"QUANTIZER LOADED:"<<thresh[i]<<" "<<symbols[i]<<" "<<is.good()<<std::endl;
+			//std::cout<<"QUANTIZER LOADED:"<<thresh[i]<<" "<<symbols[i]<<" "<<is.good()<<std::endl;
 			is>>thresh[i];
 			is>>symbols[i];
-			std::cout<<"QUANTIZER LOADED:"<<thresh[i]<<" "<<symbols[i]<<" "<<is.good()<<std::endl;
+			//std::cout<<"QUANTIZER LOADED:"<<thresh[i]<<" "<<symbols[i]<<" "<<is.good()<<std::endl;
 		}
 		is>>thresh[ttl];
 		return true;
@@ -31,10 +31,10 @@ class Quantizer
     }
     std::string quantize(float v)
     {
-		std::cout<<"TOTAL TTL:"<<ttl<<std::endl;
+		//std::cout<<"TOTAL TTL:"<<ttl<<std::endl;
         for(unsigned i=1;i<ttl+1;i++)
         {
-			std::cout<<"Threshold i:"<<thresh[i]<<std::endl;
+			//std::cout<<"Threshold i:"<<thresh[i]<<std::endl;
             if(thresh[i]>=v)
                 return symbols[i-1];
         }

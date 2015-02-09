@@ -58,9 +58,9 @@ class CYKParser
             }
 
         }
-        std::cout<<"CHECK1"<<std::endl;
+        //std::cout<<"CHECK1"<<std::endl;
         unitaryTransitiveClosure();
-        std::cout<<"CHECK2"<<std::endl;
+        //std::cout<<"CHECK2"<<std::endl;
         //Binary Rules now...
         binaryRuleMap.resize(symbolcount);
         for(unsigned i=0;i<symbolcount;i++)
