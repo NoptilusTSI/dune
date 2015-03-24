@@ -164,18 +164,12 @@ namespace Monitors
       onEntityReservation(void)
       {
 
-        //m_reserved = reserveEntity<Entities::BasicEntity>(m_args.elabel);
       }
 
       void
       onResourceRelease(void)
       {
-        /*std::cout<<"DELETE PREPROCESS -----------------------------------"<<std::endl;
-        if(preprocess)
-        {
-            delete preprocess;
-            preprocess=NULL;
-        }*/
+
       }
 
       void
@@ -187,10 +181,7 @@ namespace Monitors
       void
       onResourceInitialization(void)
       {
-        //inf("Entity State:");
-        //setEntityState(IMC::EntityState::ESTA_NORMAL, Status::CODE_ACTIVE);
 
-        //inf("Entity Label: %s %s",getEntityLabel(),getName());
 
         FileSystem::Path grammarpath=m_ctx.dir_cfg/ m_args.grammar_filename;
 
@@ -204,7 +195,6 @@ namespace Monitors
         }
 
         std::ifstream gifs(grammarpath.c_str());
-        //grammar.load(gifs);
         if(grammar.load(gifs)==false)
         {
             war("Cannot Parse Grammar File: %s",m_args.grammar_filename.c_str());
@@ -244,22 +234,18 @@ namespace Monitors
 
 
         }
-        //if(logpath.isFile())
-        //{
-            logofs.open(logpath.c_str());
-        //}
+
+        logofs.open(logpath.c_str());
+        logofs<<std::setprecision(20);
 
 
 
         grammar.convertToChomsky();
 
-        //grammar.printRules();
-        //std::cout<<"------"<<std::endl;
 
         parser.loadGrammar(grammar);
         parser.resize(m_args.window_size);
 
-        //parser.printUnitary();
 
         inf("Loaded Configuration Files");
         initOK=true;
@@ -270,25 +256,12 @@ namespace Monitors
       void
       consume(const IMC::Message* msg)
       {
-        //if (!isActive())
-        //  return;
-            inf("Consume");
+
           if(preprocess&&initOK)
           {
-            inf("Received  msg: %s",IMC::Factory::getAbbrevFromId(msg->getId()).c_str());
+            //inf("Received  msg: %s",IMC::Factory::getAbbrevFromId(msg->getId()).c_str());
             preprocess->prerocess(msg);
           }
-
-          /*inf("Message id1: %s",IMC::Factory::getAbbrevFromId(msg->getId()).c_str());
-          inf("Message id2: %d",IMC::Factory::getIdFromAbbrev(EntityState().getName()));
-          inf("Message id3: %d",EntityState().getId());*/
-
-
-          /*if (!isActive())
-          {
-            requestActivation();
-            setEntityState(IMC::EntityState::ESTA_NORMAL, Status::CODE_ACTIVE);
-        }*/
       }
 
 
@@ -335,6 +308,7 @@ namespace Monitors
             {
                 if(preprocess)
                 {
+                    //std::cout<<preprocess->getTimeStamp()<<std::endl;
 					logofs<<preprocess->getTimeStamp()<<",";
                     for(unsigned i=0;i<preprocess->concat.size();i++)
                         logofs<<preprocess->concat[i]->getRaw()<<",";

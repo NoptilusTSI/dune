@@ -172,6 +172,7 @@ class ConcatPreprocessor
 {
 
 	public:
+	ConcatPreprocessor() { last_timestamp=0;};
 	~ConcatPreprocessor()
 	{
 		for(unsigned i=0;i<concat.size();i++)
@@ -179,7 +180,7 @@ class ConcatPreprocessor
 			std::cout<<"deleting"<<concat[i]<<std::endl;
 			delete concat[i];
 		}
-		
+
 	}
 
 	 bool prerocess(const DUNE::IMC::Message* msg)
@@ -189,10 +190,10 @@ class ConcatPreprocessor
 			{
 				if(concat[i]->preprocess(msg)==false)
 					flag=false;
+                if(concat[i]->symbolReady())
+                   last_timestamp=concat[i]->getTimeStamp();
 
 			}
-		if(flag)
-			last_timestamp=msg->getTimeStamp();
 		return flag;
 	}
 	std::string getSymbol() {
