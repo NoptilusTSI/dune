@@ -1,12 +1,14 @@
 #ifndef STRINGREGISTRY_HPP_INCLUDED_
 #define STRINGREGISTRY_HPP_INCLUDED_
 
+// DUNE headers.
+#include <DUNE/DUNE.hpp>
 
 #include <string>
-#include <boost/functional/hash.hpp>
 #include <map>
 #include <set>
 #include <vector>
+#include <stdint.h>
 
 
 /**
@@ -34,23 +36,19 @@ public:
 		stringidpair p;
 		p.id = nextid++;
 		p.s = s;
-		std::size_t hashs = hasher(s);
+		std::size_t hashs = hash(s);//hasher(s);
 		ft[hashs].insert(p);
 		rt.push_back(s);
-		boost::hash_combine(seed, hashs);
 		return p.id;
 	}
-	std::size_t registryHash() const
-	{
-		return seed;
-	};
+
 	std::size_t size() const
 	{
 		return nextid - 1;
 	};
 	std::size_t getId(std::string const& s) const
 	{
-		std::size_t hashs = hasher(s);
+		std::size_t hashs = hash(s);//hasher(s);
 		fttype::const_iterator ftit = ft.find(hashs);
 
 		if(ftit == ft.end())
@@ -94,11 +92,20 @@ private:
 	typedef std::map<std::size_t, std::set<stringidpair> > fttype;
 	//From id, to string
 	typedef std::vector<std::string> rttype;
-	boost::hash<std::string> hasher;
+	//boost::hash<std::string> hasher;
 	fttype ft;//from hash to id;
 	rttype rt;//from id to string :)
 	std::size_t nextid;
 	std::size_t seed;
+
+	static std::size_t hash(std::string const& s)
+	{
+		uint8_t md[16];//Result
+		DUNE::Algorithms::MD5::compute((uint8_t*)s.c_str(), s.size(), md);
+		std::size_t *rp=(std::size_t*)md;
+		return *rp;
+
+	}
 
 };
 
